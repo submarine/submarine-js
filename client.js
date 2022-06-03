@@ -9,8 +9,8 @@ import { Submarine } from './src/submarine';
 // See https://hub.getsubmarine.com/docs/the-submarine-customer-api#authentication for how
 // Submarine Customer API signatures should be generated using the secret in a safe way.
 const DEV_ENVIRONMENT = 'staging';
-const DEV_CUSTOMER_ID = '6211133636859';
-const DEV_SHOP_DOMAIN = 'submarine-js.myshopify.com';
+const DEV_CUSTOMER_ID = '5594588086341';
+const DEV_SHOP_DOMAIN = 'disco-aparna-sandbox.myshopify.com';
 const DEV_API_SECRET = '1YoSfSMxd6LHHSdbGyp8yTBQ';
 
 // Calculate an API signature for the given customer, timestamp and API secret.
