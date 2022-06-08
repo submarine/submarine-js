@@ -7,11 +7,15 @@ const PATCH = 'patch';
 const PUT = 'put';
 const DELETE = 'delete';
 
+// Constant that determines how many times user is allowed to refresh token
+const API_RETRY_LIMIT = 1;
+
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
   production: 'https://submarine.discolabs.com/api/v1',
   staging: 'https://submarine-staging.discolabs.com/api/v1',
   uat: 'https://submarine-uat.discolabs.com/api/v1',
+  dev: 'https://submarine-aparna.au.ngrok.io/api/v1'
 };
 
 // Definition of all possible API calls and their method and path.
@@ -137,26 +141,66 @@ export class ApiClient {
     this.authentication = authentication;
     this.environment = environment;
     this.models = new Store();
+    this.retry_count = API_RETRY_LIMIT;
   }
 
   // Execute an API request against the Submarine API.
-  execute(method, data, context, callback) {
+  async execute(method, data, context, callback) {
     const url = getMethodUrl(this.environment, method, context);
     const http_method = getMethodHttpMethod(method);
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
 
+    // window.localStorage.removeItem(context.customer_id);
+    let jwtToken = window.localStorage.getItem(context.customer_id);
+    console.log("RETRY", this.retry_count)
+    if (!jwtToken) {
+      console.log("inside no token")
+      let result =
+        await this.fetchAndStoreToken((token) =>
+          window.localStorage.setItem(context.customer_id, token)
+        );
+        
+      if (result.errors) {
+        console.log(`A valid JWT Token not available : ${result.errors}`)
+        callback && callback(null, result.errors);
+        return;
+      } else {
+        jwtToken = result.token;
+      }
+    }
+
     return fetch(url + buildQueryString(queryParams), {
       method: http_method,
       mode: 'cors',
       headers: {
-        'Content-Type': 'application/json; charset=utf-8'
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': jwtToken
       },
       body: payload
     })
       .then(response => {
         response.json()
-          .then(json => {
+          .then(async json => {
+
+            if (response.status === 401) {
+              console.log("inside 401")
+              let result =
+                await this.fetchAndStoreToken((token) => {
+                  window.localStorage.removeItem(context.customer_id);
+                  window.localStorage.setItem(context.customer_id, token);  
+                });
+              
+              if (result.errors) {
+                console.log(`A valid JWT Token not available : ${result.errors}`)
+                callback && callback(null, result.errors);
+                return;
+              }
+
+              this.retry_count = this.retry_count - 1;
+              this.execute(method, data, context, callback);
+            }
+
             if(json && json.errors) {
               callback && callback(null, json.errors);
               return;
@@ -172,6 +216,43 @@ export class ApiClient {
           });
       });
   }
+
+  fetchAndStoreToken = async (callback) => {
+    let url =  '/apps/submarine/auth/tokens';
+    let queryString =  buildQueryString(this.buildQueryParams(GET, {}));
+
+    let result = { token: null, errors: null };
+  
+    if (!this.retry_count) {
+      result = { ...result, errors: `Tried ${this.retry_count} times to refresh token`};
+      return result;
+    }
+  
+    try {
+      const response = 
+      await fetch(url + queryString, {
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        }
+      });
+      
+      if (!response.ok) {
+        result = { ...result, errors: `HTTP error : ${response.status()}` }
+      } else {
+        let token = await response.text();
+        console.log('This is the token', token)
+        result = { ...result, token };
+        callback(token);
+      }
+      
+    } catch (error) {
+      result = { ...result, errors: error.message }
+    }
+  
+    return result;
+    
+  };
 
   // Build query parameters for a given request, including authentication information.
   buildQueryParams(http_method, data) {
