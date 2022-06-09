@@ -8,7 +8,7 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constant that determines how many times user is allowed to refresh token
-const API_RETRY_LIMIT = 1;
+const API_RETRY_LIMIT = 3;
 
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
@@ -151,18 +151,16 @@ export class ApiClient {
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
 
-    // window.localStorage.removeItem(context.customer_id);
     let jwtToken = window.localStorage.getItem(context.customer_id);
-    console.log("RETRY", this.retry_count)
+
     if (!jwtToken) {
-      console.log("inside no token")
       let result =
         await this.fetchAndStoreToken((token) =>
           window.localStorage.setItem(context.customer_id, token)
         );
         
       if (result.errors) {
-        console.log(`A valid JWT Token not available : ${result.errors}`)
+        console.log(`Could not generate a valid JWT token : ${result.errors}`)
         callback && callback(null, result.errors);
         return;
       } else {
@@ -184,24 +182,23 @@ export class ApiClient {
           .then(async json => {
 
             if (response.status === 401) {
-              console.log("inside 401")
               let result =
                 await this.fetchAndStoreToken((token) => {
                   window.localStorage.removeItem(context.customer_id);
                   window.localStorage.setItem(context.customer_id, token);  
-                });
+                }, this.retry_count);
               
               if (result.errors) {
-                console.log(`A valid JWT Token not available : ${result.errors}`)
+                console.log(`Could not generate a valid JWT token : ${result.errors}`);
                 callback && callback(null, result.errors);
                 return;
               }
-
+              
               this.retry_count = this.retry_count - 1;
               this.execute(method, data, context, callback);
             }
 
-            if(json && json.errors) {
+            if (json && json.errors) {
               callback && callback(null, json.errors);
               return;
             }
@@ -217,31 +214,21 @@ export class ApiClient {
       });
   }
 
-  fetchAndStoreToken = async (callback) => {
-    let url =  '/apps/submarine/auth/tokens';
-    let queryString =  buildQueryString(this.buildQueryParams(GET, {}));
-
+  fetchAndStoreToken = async (callback, retry_count = API_RETRY_LIMIT) => {
     let result = { token: null, errors: null };
-  
-    if (!this.retry_count) {
-      result = { ...result, errors: `Tried ${this.retry_count} times to refresh token`};
+
+    if (!retry_count) {
+      result = { ...result, errors: `Tried ${API_RETRY_LIMIT} times to refresh token`};
       return result;
     }
   
     try {
-      const response = 
-      await fetch(url + queryString, {
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        }
-      });
-      
+      const response = await fetch('/apps/submarine/auth/tokens');
+
       if (!response.ok) {
-        result = { ...result, errors: `HTTP error : ${response.status()}` }
+        result = { ...result, errors: `HTTP error : ${response.status}` }
       } else {
         let token = await response.text();
-        console.log('This is the token', token)
         result = { ...result, token };
         callback(token);
       }

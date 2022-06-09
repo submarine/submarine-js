@@ -10,7 +10,6 @@ import { Submarine } from './src/submarine';
 // Submarine Customer API signatures should be generated using the secret in a safe way.
 const DEV_ENVIRONMENT = 'dev';
 const DEV_CUSTOMER_ID = '5594588086341';
-const DEV_LOGGED_IN_CUSTOMER_ID = '5594588086341';
 const DEV_SHOP_DOMAIN = 'disco-aparna-sandbox.myshopify.com';
 const DEV_API_SECRET = 'npzfc1eVsGWCx6DwgjSNivH4';
 
@@ -30,7 +29,6 @@ const generateDevConfiguration = () => {
   return {
     authentication: {
       customer_id: DEV_CUSTOMER_ID,
-      logged_in_customer_id: DEV_LOGGED_IN_CUSTOMER_ID,
       shop: DEV_SHOP_DOMAIN,
       signature: calculateSignature(DEV_CUSTOMER_ID, timestamp, DEV_API_SECRET),
       timestamp: timestamp
