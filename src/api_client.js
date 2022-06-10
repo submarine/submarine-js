@@ -8,7 +8,7 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constant that determines how many times user is allowed to refresh token
-const API_RETRY_LIMIT = 3;
+const API_RETRY_LIMIT = 1;
 
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
@@ -155,7 +155,7 @@ export class ApiClient {
 
     if (!jwtToken) {
       let result =
-        await this.fetchAndStoreToken((token) =>
+        await this.fetchJWTToken((token) =>
           window.localStorage.setItem(context.customer_id, token)
         );
         
@@ -183,7 +183,7 @@ export class ApiClient {
 
             if (response.status === 401) {
               let result =
-                await this.fetchAndStoreToken((token) => {
+                await this.fetchJWTToken((token) => {
                   window.localStorage.removeItem(context.customer_id);
                   window.localStorage.setItem(context.customer_id, token);  
                 }, this.retry_count);
@@ -214,7 +214,7 @@ export class ApiClient {
       });
   }
 
-  fetchAndStoreToken = async (callback, retry_count = API_RETRY_LIMIT) => {
+  fetchJWTToken = async (callback, retry_count = API_RETRY_LIMIT) => {
     let result = { token: null, errors: null };
 
     if (!retry_count) {
