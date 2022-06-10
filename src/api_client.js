@@ -8,7 +8,7 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constant that determines how many times user is allowed to refresh token
-const TOKEN_GEN_RETRIES = 1;
+const TOKEN_GEN_RETRIES = 3;
 
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
@@ -171,7 +171,7 @@ export class ApiClient {
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Bearer ${jwtToken}`
+        'Authorization': jwtToken
       },
       body: payload
     })
@@ -190,7 +190,7 @@ export class ApiClient {
               
               window.localStorage.removeItem(context.customer_id);
               window.localStorage.setItem(context.customer_id, result.token);
-              this.retry_count = this.token_gen_retries_tried - 1;
+              this.token_gen_retries_tried = this.token_gen_retries_tried - 1;
               this.execute(method, data, context, callback);
             }
 
