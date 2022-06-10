@@ -8,7 +8,7 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constant that determines how many times user is allowed to refresh token
-const API_RETRY_LIMIT = 1;
+const TOKEN_GEN_RETRIES = 1;
 
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
@@ -141,7 +141,7 @@ export class ApiClient {
     this.authentication = authentication;
     this.environment = environment;
     this.models = new Store();
-    this.retry_count = API_RETRY_LIMIT;
+    this.token_gen_retries_tried = TOKEN_GEN_RETRIES;
   }
 
   // Execute an API request against the Submarine API.
@@ -154,16 +154,14 @@ export class ApiClient {
     let jwtToken = window.localStorage.getItem(context.customer_id);
 
     if (!jwtToken) {
-      let result =
-        await this.fetchJWTToken((token) =>
-          window.localStorage.setItem(context.customer_id, token)
-        );
+      let result = await this.fetchJWTToken();
         
       if (result.errors) {
         console.log(`Could not generate a valid JWT token : ${result.errors}`)
         callback && callback(null, result.errors);
         return;
       } else {
+        window.localStorage.setItem(context.customer_id, result.token);
         jwtToken = result.token;
       }
     }
@@ -173,7 +171,7 @@ export class ApiClient {
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': jwtToken
+        'Authorization': `Bearer ${jwtToken}`
       },
       body: payload
     })
@@ -182,11 +180,7 @@ export class ApiClient {
           .then(async json => {
 
             if (response.status === 401) {
-              let result =
-                await this.fetchJWTToken((token) => {
-                  window.localStorage.removeItem(context.customer_id);
-                  window.localStorage.setItem(context.customer_id, token);  
-                }, this.retry_count);
+              let result = await this.fetchJWTToken(this.token_gen_retries_tried);
               
               if (result.errors) {
                 console.log(`Could not generate a valid JWT token : ${result.errors}`);
@@ -194,7 +188,9 @@ export class ApiClient {
                 return;
               }
               
-              this.retry_count = this.retry_count - 1;
+              window.localStorage.removeItem(context.customer_id);
+              window.localStorage.setItem(context.customer_id, result.token);
+              this.retry_count = this.token_gen_retries_tried - 1;
               this.execute(method, data, context, callback);
             }
 
@@ -214,11 +210,11 @@ export class ApiClient {
       });
   }
 
-  fetchJWTToken = async (callback, retry_count = API_RETRY_LIMIT) => {
+  fetchJWTToken = async (token_gen_retries_tried = TOKEN_GEN_RETRIES) => {
     let result = { token: null, errors: null };
 
-    if (!retry_count) {
-      result = { ...result, errors: `Tried ${API_RETRY_LIMIT} times to refresh token`};
+    if (!token_gen_retries_tried) {
+      result = { ...result, errors: `Tried ${TOKEN_GEN_RETRIES} times to refresh token`};
       return result;
     }
   
@@ -230,7 +226,6 @@ export class ApiClient {
       } else {
         let token = await response.text();
         result = { ...result, token };
-        callback(token);
       }
       
     } catch (error) {
