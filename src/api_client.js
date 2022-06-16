@@ -7,9 +7,6 @@ const PATCH = 'patch';
 const PUT = 'put';
 const DELETE = 'delete';
 
-// Constant that determines how many times user is allowed to refresh token
-const TOKEN_GEN_RETRIES = 3;
-
 // Constants for Submarine API endpoints across environments.
 const API_ENDPOINTS = {
   production: 'https://submarine.discolabs.com/api/v1',
@@ -141,7 +138,6 @@ export class ApiClient {
     this.authentication = authentication;
     this.environment = environment;
     this.models = new Store();
-    this.token_gen_retries_tried = TOKEN_GEN_RETRIES;
   }
 
   // Execute an API request against the Submarine API.
@@ -150,20 +146,16 @@ export class ApiClient {
     const http_method = getMethodHttpMethod(method);
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
+    let jwtToken = null;
 
-    let jwtToken = window.localStorage.getItem(context.customer_id);
-
-    if (!jwtToken) {
-      let result = await this.fetchJWTToken();
-        
-      if (result.errors) {
-        console.log(`Could not generate a valid JWT token : ${result.errors}`)
-        callback && callback(null, result.errors);
-        return;
-      } else {
-        window.localStorage.setItem(context.customer_id, result.token);
-        jwtToken = result.token;
-      }
+    let result = await this.fetchJWTToken();
+      
+    if (result.errors) {
+      callback && callback(null, result.errors);
+      return;
+    } else {
+      window.localStorage.setItem(context.customer_id, result.token);
+      jwtToken = result.token;
     }
 
     return fetch(url + buildQueryString(queryParams), {
@@ -180,17 +172,13 @@ export class ApiClient {
           .then(async json => {
 
             if (response.status === 401) {
-              let result = await this.fetchJWTToken(this.token_gen_retries_tried);
+              let result = await this.fetchJWTToken();
               
               if (result.errors) {
-                console.log(`Could not generate a valid JWT token : ${result.errors}`);
                 callback && callback(null, result.errors);
                 return;
               }
               
-              window.localStorage.removeItem(context.customer_id);
-              window.localStorage.setItem(context.customer_id, result.token);
-              this.token_gen_retries_tried = this.token_gen_retries_tried - 1;
               this.execute(method, data, context, callback);
             }
 
@@ -210,14 +198,9 @@ export class ApiClient {
       });
   }
 
-  fetchJWTToken = async (token_gen_retries_tried = TOKEN_GEN_RETRIES) => {
+  fetchJWTToken = async () => {
     let result = { token: null, errors: null };
 
-    if (!token_gen_retries_tried) {
-      result = { ...result, errors: `Tried ${TOKEN_GEN_RETRIES} times to refresh token`};
-      return result;
-    }
-  
     try {
       const response = await fetch('/apps/submarine/auth/tokens');
 
