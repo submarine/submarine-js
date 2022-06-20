@@ -8,6 +8,7 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constants for Submarine API endpoints across environments.
+
 const API_ENDPOINTS = {
   production: 'https://submarine.discolabs.com/api/v1',
   staging: 'https://submarine-staging.discolabs.com/api/v1',
