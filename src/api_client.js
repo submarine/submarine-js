@@ -146,16 +146,12 @@ export class ApiClient {
     const http_method = getMethodHttpMethod(method);
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
-    let jwtToken = null;
 
     let result = await this.fetchJWTToken();
       
     if (result.errors) {
       callback && callback(null, result.errors);
       return;
-    } else {
-      window.localStorage.setItem(context.customer_id, result.token);
-      jwtToken = result.token;
     }
 
     return fetch(url + buildQueryString(queryParams), {
@@ -163,23 +159,23 @@ export class ApiClient {
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': jwtToken
+        'Authorization': result.token
       },
       body: payload
     })
       .then(response => {
         response.json()
           .then(async json => {
-
+            console.log(json)
             if (response.status === 401) {
-              let result = await this.fetchJWTToken();
+              // let result = await this.fetchJWTToken();
               
-              if (result.errors) {
-                callback && callback(null, result.errors);
+              // if (result.errors) {
+                callback && callback(null, json.errors);
                 return;
-              }
+              // }
               
-              this.execute(method, data, context, callback);
+              // this.execute(method, data, context, callback);
             }
 
             if (json && json.errors) {
