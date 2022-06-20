@@ -11,8 +11,7 @@ const DELETE = 'delete';
 const API_ENDPOINTS = {
   production: 'https://submarine.discolabs.com/api/v1',
   staging: 'https://submarine-staging.discolabs.com/api/v1',
-  uat: 'https://submarine-uat.discolabs.com/api/v1',
-  dev: 'https://submarine-aparna.au.ngrok.io/api/v1'
+  uat: 'https://submarine-uat.discolabs.com/api/v1'
 };
 
 // Definition of all possible API calls and their method and path.
@@ -166,16 +165,10 @@ export class ApiClient {
       .then(response => {
         response.json()
           .then(async json => {
-            console.log(json)
+
             if (response.status === 401) {
-              // let result = await this.fetchJWTToken();
-              
-              // if (result.errors) {
                 callback && callback(null, json.errors);
                 return;
-              // }
-              
-              // this.execute(method, data, context, callback);
             }
 
             if (json && json.errors) {
