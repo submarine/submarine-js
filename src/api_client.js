@@ -147,10 +147,10 @@ export class ApiClient {
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
 
-    let result = await this.fetchJWTToken();
+    let tokenResult = await this.fetchJWTToken();
       
-    if (result.errors) {
-      callback && callback(null, result.errors);
+    if (tokenResult.errors) {
+      callback && callback(null, tokenResult.errors);
       return;
     }
 
@@ -159,7 +159,7 @@ export class ApiClient {
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': result.token
+        'Authorization': `Bearer ${tokenResult.token}`
       },
       body: payload
     })
@@ -188,7 +188,7 @@ export class ApiClient {
       });
   }
 
-  fetchJWTToken = async () => {
+  async fetchJWTToken() {
     let result = { token: null, errors: null };
 
     try {
