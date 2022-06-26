@@ -1,7 +1,6 @@
 import { Submarine } from './src/submarine';
 
 // Define a customer, shop and API secret for use in development only.
-// Include an endpoint in the API_ENDPOINTS that corresponds to your local instance of Submarine.
 //
 // Note: You should *never* expose these values, especially the API secret, to the browser
 // in a production environment.
