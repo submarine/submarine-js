@@ -8,10 +8,11 @@ const PUT = 'put';
 const DELETE = 'delete';
 
 // Constants for Submarine API endpoints across environments.
+
 const API_ENDPOINTS = {
   production: 'https://submarine.discolabs.com/api/v1',
   staging: 'https://submarine-staging.discolabs.com/api/v1',
-  uat: 'https://submarine-uat.discolabs.com/api/v1',
+  uat: 'https://submarine-uat.discolabs.com/api/v1'
 };
 
 // Definition of all possible API calls and their method and path.
@@ -140,24 +141,38 @@ export class ApiClient {
   }
 
   // Execute an API request against the Submarine API.
-  execute(method, data, context, callback) {
+  async execute(method, data, context, callback) {
     const url = getMethodUrl(this.environment, method, context);
     const http_method = getMethodHttpMethod(method);
     const queryParams = this.buildQueryParams(http_method, data);
     const payload = getMethodPayload(http_method, data);
 
+    let tokenResult = await this.fetchJWTToken();
+      
+    if (tokenResult.errors) {
+      callback && callback(null, tokenResult.errors);
+      return;
+    }
+
     return fetch(url + buildQueryString(queryParams), {
       method: http_method,
       mode: 'cors',
       headers: {
-        'Content-Type': 'application/json; charset=utf-8'
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': `Bearer ${tokenResult.token}`
       },
       body: payload
     })
       .then(response => {
         response.json()
-          .then(json => {
-            if(json && json.errors) {
+          .then(async json => {
+
+            if (response.status === 401) {
+                callback && callback(null, json.errors);
+                return;
+            }
+
+            if (json && json.errors) {
               callback && callback(null, json.errors);
               return;
             }
@@ -172,6 +187,27 @@ export class ApiClient {
           });
       });
   }
+
+  async fetchJWTToken() {
+    let result = { token: null, errors: null };
+
+    try {
+      const response = await fetch('/apps/submarine/auth/tokens');
+
+      if (!response.ok) {
+        result = { ...result, errors: `HTTP error : ${response.status}` }
+      } else {
+        let token = await response.text();
+        result = { ...result, token };
+      }
+      
+    } catch (error) {
+      result = { ...result, errors: error.message }
+    }
+  
+    return result;
+    
+  };
 
   // Build query parameters for a given request, including authentication information.
   buildQueryParams(http_method, data) {
