@@ -36,7 +36,29 @@ import { Submarine } from 'submarine-js';
 The Submarine.js library provides a `Submarine` class, which should be initialised with environmental context so that API calls can successfully be made:
 
 ```js
-<script src="{{ 'submarine.js' | asset_url }}"></script>
+const submarine = new Submarine.Submarine({
+  environment: "staging",
+  authentication: {
+    customer_id: "6211133636859",
+    shop: "submarine-js.myshopify.com"
+  }
+});
+```
+
+The `environment` initialisation option tells the client which API endpoint to make requests against.
+
+The `authentication` initialisation options provides information about the context the client's being initialised in, specifically the authentication information for the currently logged in customer - see "Authentication" below.
+
+### Authentication
+`submarine.js` using [Jason Web Tokens (JWTs)](https://jwt.io/) for authenticating client side requests, and returning sensitive customer information via the JWTs encoded `tokens`.
+
+This allows for a secure environment to exchange customer, and shop information flow via the client.
+
+Here's an example of how you can initialised the Submarine client library within a Liquid template in your **Shopify** theme:
+
+```liquid
+    <script src="{{ 'submarine.js' | asset_url }}"></script>
+
     <script>
       window.submarine = new window.Submarine.Submarine({
         environment: "dev",
@@ -46,48 +68,15 @@ The Submarine.js library provides a `Submarine` class, which should be initialis
         }
       });
      </script>
-Go back to store --> themes --> Preview and login to your online store.
-Run the following command from the console.
-window.submarine.api.getSubscriptions(sub => console.log(sub));
 ```
 
-The `environment` initialisation option tells the client which API endpoint to make requests against.
+Once past this step you will be able to access your `subscriptions` via the `console`.
 
-The `authentication` initialisation options provides information about the context the client's being initialised in, specifically the authentication information for the currently logged in customer - see "Authentication" below.
-
-### Authentication
-Because the Submarine Customer API is returning sensitive customer information (a list of their stored payment methods, saved subscriptions, and the contents of those subscriptions), authentication in required to retrieve or update any customer information.
-
-Requests to the API are authenticated by providing three parameters in the querystring of all HTTP requests (whether `GET` or `POST` requests):
-
-* `shop` - the Shopify domain of the current store, eg `example.myshopify.com`;
-* `timestamp` - a UNIX timestamp of when the request was generated;
-* `signature` - a SHA256 HMAC signature generated from the ID of the logged in customer, the timestamp value, and a secret key made available to your theme via a shop-level metafield `shop.metafields.submarine.customer_api_secret`.
-
-For Shopify themes, these values should be generated within your Liquid templates and passed during initialisation. For other clients, such as mobile apps, these values should be generated within your application code before making calls.
-
-Here's an example of how you can initialised the Submarine client library within a Liquid template in your Shopify theme:
-
-```liquid
-# this all goes
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/submarine-js@0.4.0-beta.2/dist/submarine.js"></script>
-
-{% assign api_timestamp = 'now' | date: '%s' %}
-{% assign api_data = customer.id | append: ':' | append: api_timestamp %}
-{% assign api_signature = api_data | hmac_sha256: shop.metafields.submarine.customer_api_secret %}
-
-<script>
-  window.submarine = new Submarine.Submarine({
-    environment: "production",
-    authentication: {
-      customer_id: "{{ customer.id }}",
-      shop: "{{ shop.permanent_domain }}",
-      timestamp: "{{ api_timestamp }}",
-      signature: "{{ api_signature }}"
-    }
-  });
-</script>
+```js
+  window.submarine.api.getSubscriptions(sub => console.log(sub));
 ```
+
+Above will give you a list of your existing subscriptions attached to your initialised shop.
 
 ### Making API Calls
 Once you have an initialised client, making API calls is pretty simple:
@@ -100,7 +89,7 @@ submarine.api.getSubscriptions((subscriptions, errors) => {
     // handle errors here
     return;
   }
-  
+
   // handle success here
   console.log(subscriptions);
 });
@@ -242,7 +231,7 @@ Create an upsell for the specified order.
 submarine.api.createUpsell(394573949234, {
     variant_id: 2384723942,
     quantity: 2,
-    notify_customer: false   
+    notify_customer: false
   },
   (subscription, errors) => {
     // subscription is the newly duplicated subscription
@@ -271,7 +260,7 @@ Before you start developing, ensure you have [NPM](https://www.npmjs.com) and [Y
 git clone https://github.com/discolabs/submarine-js.git
 cd submarine-js
 yarn
-``` 
+```
 
 The library uses [Vite](https://vitejs.dev) to provide a streamlined development experience with hot module reloading, alongside distribution building.
 
