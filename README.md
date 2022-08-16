@@ -14,12 +14,12 @@
       - [3.2.1 Get subscriptions](#321-get-subscriptions)
       - [3.2.2 Bulk update subscriptions](#322-bulk-update-subscriptions)
       - [3.2.3 Get a subscription](#323-get-a-subscription)
-      - [3.3.4 Update a subscription](#334-update-a-subscription)
-      - [3.3.5 Duplicate a subscription](#335-duplicate-a-subscription)
-    - [3.4 Upsells](#34-upsells)
-      - [3.4.1 Create an upsell](#341-create-an-upsell)
-    - [3.5 Other](#35-other)
-      - [3.5.1 Generate a payment processor client token](#351-generate-a-payment-processor-client-token)
+      - [3.2.4 Update a subscription](#324-update-a-subscription)
+      - [3.2.5 Duplicate a subscription](#325-duplicate-a-subscription)
+    - [3.3 Upsells](#33-upsells)
+      - [3.3.1 Create an upsell](#331-create-an-upsell)
+    - [3.4 Other](#34-other)
+      - [3.4.1 Generate a payment processor client token](#341-generate-a-payment-processor-client-token)
   - [4.0 Development](#40-development)
   - [5.0 Licence](#50-licence)
 
@@ -221,7 +221,7 @@ submarine.api.getSubscription(1212, (subscription, errors) => {
 });
 ```
 
-#### 3.3.4 Update a subscription
+#### 3.2.4 Update a subscription
 Update the specified subscription for the currently authenticated customer.
 
 ```js
@@ -236,7 +236,7 @@ submarine.api.updateSubscription(1212, {
 
 Learn more about the attributes used to update subscriptions [here](https://hub.getsubmarine.com/docs/building-subscription-management-into-your-customer-account-pages).
 
-#### 3.3.5 Duplicate a subscription
+#### 3.2.5 Duplicate a subscription
 Duplicate the specified subscription for the currently authenticated customer.
 
 ```js
@@ -247,9 +247,9 @@ submarine.api.duplicateSubscription(1212,
 );
 ```
 
-### 3.4 Upsells
+### 3.3 Upsells
 
-#### 3.4.1 Create an upsell
+#### 3.3.1 Create an upsell
 Create an upsell for the specified order.
 
 ```js
@@ -264,9 +264,9 @@ submarine.api.createUpsell(394573949234, {
 );
 ```
 
-### 3.5 Other
+### 3.4 Other
 
-#### 3.5.1 Generate a payment processor client token
+#### 3.4.1 Generate a payment processor client token
 Generate a client token for the specified payment processor.
 
 ```js
