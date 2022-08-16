@@ -36,15 +36,19 @@ import { Submarine } from 'submarine-js';
 The Submarine.js library provides a `Submarine` class, which should be initialised with environmental context so that API calls can successfully be made:
 
 ```js
-const submarine = new Submarine.Submarine({
-  environment: "staging",
-  authentication: {
-    customer_id: "6211133636859",
-    shop: "submarine-js.myshopify.com",
-    timestamp: "1653301600549",
-    signature: "a59e4eeba497d629170ffabfee90aee9ceaa9ca8d7f3fe5e155bb082160d2ac7"
-  }
-});
+<script src="{{ 'submarine.js' | asset_url }}"></script>
+    <script>
+      window.submarine = new window.Submarine.Submarine({
+        environment: "dev",
+        authentication: {
+          shop: "{{ shop.permanent_domain }}",
+          customer_id: "{{ customer.id }}"
+        }
+      });
+     </script>
+Go back to store --> themes --> Preview and login to your online store.
+Run the following command from the console.
+window.submarine.api.getSubscriptions(sub => console.log(sub));
 ```
 
 The `environment` initialisation option tells the client which API endpoint to make requests against.
@@ -65,6 +69,7 @@ For Shopify themes, these values should be generated within your Liquid template
 Here's an example of how you can initialised the Submarine client library within a Liquid template in your Shopify theme:
 
 ```liquid
+# this all goes
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/submarine-js@0.4.0-beta.2/dist/submarine.js"></script>
 
 {% assign api_timestamp = 'now' | date: '%s' %}
