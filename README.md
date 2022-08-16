@@ -7,8 +7,8 @@ The platform (and this repository) is built and maintained by [Disco Labs](https
 # Table of Contents
   - [1.0 Usage](#10-usage)
     - [1.1 Initialisation](#11-initialisation)
-    - [2.2 Authentication](#22-authentication)
-    - [2.2.3 Making API Calls](#223-making-api-calls)
+    - [1.2 Authentication](#12-authentication)
+    - [1.2.3 Making API Calls](#123-making-api-calls)
   - [2.0 Reference](#20-reference)
     - [2.1 Payment methods](#21-payment-methods)
       - [2.1.1 Get payment methods](#211-get-payment-methods)
