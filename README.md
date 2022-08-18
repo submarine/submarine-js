@@ -74,17 +74,17 @@ const submarine = new Submarine.Submarine({
 
 The `environment` initialisation option tells the client which API endpoint to make requests against.
 
-The `authentication` initialisation options provides information about the context the client's being initialised in, specifically the authentication information for the currently logged in customer - see "Authentication" below.
+The `authentication` initialisation options provides the `customer_id` and the corresponding `shop` which will later be used in the authentication flow.
 
 ### Authentication
-`submarine.js` using [Jason Web Tokens (JWTs)](https://jwt.io/) for authenticating client side requests, and returning sensitive customer information via the JWTs encoded `tokens`.
+`submarine.js` uses [JSON Web Tokens (JWTs)](https://jwt.io/) for authenticating client side requests, and returning sensitive customer information via the JWTs encoded `tokens`.
 
-This allows for a secure environment to exchange customer, and shop information flow via the client.
+This allows for the exchange of customer and shop information with the client.
 
-Here's an example of how you can initialised the Submarine client library within a Liquid template in your **Shopify** theme:
+Here's an example of how you can initialise the Submarine client library within a Liquid template in your **Shopify** theme:
 
 ```liquid
-    <script src="{{ 'submarine.js' | asset_url }}"></script>
+    <script src="{{'https://cdn.jsdelivr.net/npm/submarine-js@0.4.0-beta.2/dist/submarine.js)' | asset_url }}"></script>
 
     <script>
       window.submarine = new window.Submarine.Submarine({
