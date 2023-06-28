@@ -1,11 +1,11 @@
 import { Store } from 'json-api-models';
 
 // Constants for possible HTTP methods.
-const GET = 'get';
-const POST = 'post';
-const PATCH = 'patch';
-const PUT = 'put';
-const DELETE = 'delete';
+const GET = 'GET';
+const POST = 'POST';
+const PATCH = 'PATCH';
+const PUT = 'PUT';
+const DELETE = 'DELETE';
 
 // Constants for Submarine API endpoints across environments.
 
