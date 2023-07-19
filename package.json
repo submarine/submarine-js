@@ -1,6 +1,6 @@
 {
   "name": "submarine-js",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Javascript client library for Submarine.",
   "repository": {
     "type": "git",

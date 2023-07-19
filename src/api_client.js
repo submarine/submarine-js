@@ -67,7 +67,10 @@ const API_METHODS = {
   },
   generate_payment_processor_client_token: {
     http_method: POST,
-    endpoint: '/payment_processor_client_tokens.json'
+    endpoint: '/payment_processor_client_tokens.json',
+    query_params_override: {
+      customer_id: null
+    }
   },
   create_preliminary_payment_method: {
     http_method: POST,
@@ -144,7 +147,7 @@ export class ApiClient {
   async execute(method, data, context, callback) {
     const url = getMethodUrl(this.environment, method, context);
     const http_method = getMethodHttpMethod(method);
-    const queryParams = this.buildQueryParams(http_method, data);
+    const queryParams = this.buildQueryParams(method, http_method, data);
     const payload = getMethodPayload(http_method, data);
 
     let tokenResult = await this.fetchJWTToken();
@@ -210,10 +213,13 @@ export class ApiClient {
   };
 
   // Build query parameters for a given request, including authentication information.
-  buildQueryParams(http_method, data) {
-    return http_method === GET
-      ? Object.assign(this.authentication, data)
-      : this.authentication;
+  buildQueryParams(method, http_method, data) {
+    return Object.assign(
+      {},
+      this.authentication,
+      http_method === GET ? data : {},
+      API_METHODS[method].query_params_override || {}
+    );
   }
 
   // Get a list of payment methods for the currently authenticated customer.
