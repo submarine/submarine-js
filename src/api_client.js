@@ -69,7 +69,7 @@ const API_METHODS = {
     http_method: POST,
     endpoint: '/payment_processor_client_tokens.json',
     query_params_override: {
-      customer_id: null
+      customer_id: undefined
     }
   },
   create_preliminary_payment_method: {
@@ -88,6 +88,7 @@ const getMethodUrl = (environment, method, context) =>
 // Return a querystring that can be appended to an API endpoint.
 const buildQueryString = params => {
   const queryString = Object.keys(params)
+    .filter(key => params[key] !== undefined)
     .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
     .join('&');
 
