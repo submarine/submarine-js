@@ -74,7 +74,10 @@ const API_METHODS = {
   },
   create_preliminary_payment_method: {
     http_method: POST,
-    endpoint: '/preliminary_payment_methods.json'
+    endpoint: '/preliminary_payment_methods.json',
+    query_params_override: {
+      customer_id: undefined
+    }
   }
 };
 
