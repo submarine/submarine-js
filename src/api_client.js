@@ -68,6 +68,7 @@ const API_METHODS = {
   generate_payment_processor_client_token: {
     http_method: POST,
     endpoint: '/payment_processor_client_tokens.json',
+    authenticated: false,
     query_params_override: {
       customer_id: undefined
     }
@@ -75,6 +76,7 @@ const API_METHODS = {
   create_preliminary_payment_method: {
     http_method: POST,
     endpoint: '/preliminary_payment_methods.json',
+    authenticated: false,
     query_params_override: {
       customer_id: undefined
     }
@@ -100,6 +102,9 @@ const buildQueryString = params => {
 
 // Return the appropriate HTTP method (GET, POST, DELETE etc) for the given API method.
 const getMethodHttpMethod = method => API_METHODS[method].http_method;
+
+// Return whether the given method requires authentication.
+const getMethodAuthenticated = method => (API_METHODS[method].authenticated !== false);
 
 // Return the appropriate request payload for the given HTTP method and data.
 const getMethodPayload = (http_method, data) => {
@@ -151,23 +156,29 @@ export class ApiClient {
   async execute(method, data, context, callback) {
     const url = getMethodUrl(this.environment, method, context);
     const http_method = getMethodHttpMethod(method);
+    const authenticated = getMethodAuthenticated(method);
     const queryParams = this.buildQueryParams(method, http_method, data);
     const payload = getMethodPayload(http_method, data);
 
-    let tokenResult = await this.fetchJWTToken();
-      
-    if (tokenResult.errors) {
-      callback && callback(null, tokenResult.errors);
-      return;
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8'
+    }
+
+    if(authenticated) {
+      let tokenResult = await this.fetchJWTToken();
+
+      if (tokenResult.errors) {
+        callback && callback(null, tokenResult.errors);
+        return;
+      }
+
+      headers['Authorization'] = `Bearer ${tokenResult.token}`;
     }
 
     return fetch(url + buildQueryString(queryParams), {
       method: http_method,
       mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Bearer ${tokenResult.token}`
-      },
+      headers: headers,
       body: payload
     })
       .then(response => {
